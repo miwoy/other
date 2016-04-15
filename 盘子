@@ -1,0 +1,74 @@
+
+
+
+i = 1
+o = 2
+i + o goto A
+
+t = true;
+f = false;
+t goto A
+f goto B
+
+function
+
+f x,y,z->
+x,y,z
+
+盘子
+
+原子
+
+a: 1
+b: 2
+c: 3
+boo: true
+
+A: a,b,c->
+	d: 4
+	return a+b+c+d
+
+IF: a,b,c A>=100 goto
+	boo: false
+!IF goto
+	boo: true
+a,b,c += a,b,c 
+FOR: boo goto IF 
+
+A: TRUE? 
+	b++
+	b>10?A: FLASE
+	go A
+
+#Object is a Array and c
+
+OBJECT: 
+	a: 1, b:2, c: 3
+a1,b1,c1: OBJECT
+===
+a1: OBJECT.a
+a2: OBJECT.b
+a3: OBJECT.c
+
+#Function is Object
+
+f: a,b,c-> a+b+c
+===
+f: a,b,c->
+	return a+b+c
+
+#JiBen
+i: 1
+i: ''
+i: ""
+i: 0.0
+i: TRUE
+
+冒号为标记变量运算符，等于号为赋值运算符，goto只作用于同级作用域标记中
+
+exec用法： 变量A goto 函数F 参数a,参数b,参数c...   调用函数F将结果赋值给变量A
+
+量： 原子量，盘子量，虚拟盘子
+结构： 顺序，选择，go
+作用域： 盘子作用域
+
