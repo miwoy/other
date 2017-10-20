@@ -1,0 +1,23 @@
+### Node template
+# Logs
+log
+*.log
+doc
+.idea
+output
+*.swp
+# Runtime data
+pids
+*.pid
+*.seed
+lib-cov
+.grunt
+.DS_Store
+doc/*
+# Compiled binary addons (http://nodejs.org/api/addons.html)
+build/Release
+node_modules
+coverage/
+mochawesome-reports/
+.tmp/
+TIMELINE

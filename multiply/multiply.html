@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Multiply</title>
+	<script src="https://cdn.bootcss.com/echarts/3.7.2/echarts-en.js"></script>
+</head>
+
+<body>
+	<div id="main" style="width: 600px;height:400px;"></div>
+	<script type="text/javascript">
+	var myChart = echarts.init(document.getElementById('main'));
+
+
+	var data = [];
+
+	option = {
+		title: {
+			text: '增长复合函数'
+		},
+		tooltip: {
+			trigger: 'axis',
+			// formatter: function(params) {
+			// 	params = params[0];
+			// 	var date = new Date(params.name);
+			// 	return date.getDate() + '/' + (date.getMonth() + 1) + '/' + date.getFullYear() + ' : ' + params.value[1];
+			// },
+			axisPointer: {
+				animation: true
+			}
+		},
+		xAxis: {
+			type: 'category',
+			splitLine: {
+				show: true
+			},
+			boundaryGap: true,
+			data: []
+		},
+		yAxis: {
+			type: 'value',
+			boundaryGap: [0, '100%'],
+			splitLine: {
+				show: true
+			}
+		},
+		series: [{
+			name: '空间状态',
+			type: 'line',
+			showSymbol: true,
+			hoverAnimation: true,
+			data: data
+		}]
+	};
+
+
+	/**
+	 * 增长复合函数
+	 * Z(t) = ∑x(t)-f(Z(t-1))
+	 * Z(t)表示t时刻的当前空间状态（样本数量）
+	 * x(t)表示在t时刻样本补充的数量
+	 * f(t)表示抑制函数，抑制函数与上一时刻的空间状态都有关系
+	 */
+
+	// 抑制函数
+	function f(totalCount) {
+		if (totalCount === 0) return 0;
+
+		// 以自然对数函数作为抑制函数
+		return Math.round(Math.log(totalCount)*2/3);
+	}
+
+	// 增长函数
+	function x() {
+		return Math.round(Math.random() * 10);
+	}
+	var totalCount = 0; // 空间状态，样本数量
+	
+	// 空间状态函数
+	function Z() {
+
+		let increment = 0;
+		let decrement = 0;
+
+		setInterval(function() {
+			decrement = f(totalCount);
+			totalCount -= decrement;
+			let now = new Date();
+
+
+			let axisData = (new Date()).toLocaleTimeString().replace(/^\D*/, '');
+			if (data.length > 100) {
+				option.xAxis.data.shift();
+				data.shift();
+			}
+
+			option.xAxis.data.push(axisData);
+			data.push(totalCount);
+			option.data = data;
+			myChart.setOption(option);
+
+
+			// console.log("当前增量:", increment);
+			console.log("抑制量:", decrement);
+			console.log("当前空间状态:", totalCount);
+
+		}, 300);
+
+		setInterval(function() {
+			increment = x();
+			totalCount += increment;
+		}, 1000);
+
+
+	}
+
+	Z();
+
+	</script>
+</body>
+
+</html>

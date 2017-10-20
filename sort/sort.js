@@ -7,7 +7,7 @@ var arry3 = [],
     num1 = 0,
     num2 = 0,
     num3 = 0,
-    length = 100; // 测试数据数组长度
+    length = 100000; // 测试数据数组长度
 for (var i = 0; i < length; i++) {
     var rdm = Math.round(Math.random() * length);
     arry1.push(rdm);
