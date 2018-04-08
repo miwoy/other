@@ -17,7 +17,7 @@ const rl = readline.createInterface({
 function timeline() {
 	rl.question('请输入此刻的念头: ', (answer) => {
 		// TODO: Log the answer in a database
-		fs.appendFileSync("./TIMELINE",new Date().toISOString() +"\n\t"+  answer +"\n");
+		fs.appendFileSync("./TIMELINE",formatDate(new Date()) +"\n\t"+  answer +"\n");
 		console.log(new Date().toISOString() +"\n"+  answer);
 
 		// rl.close();
@@ -31,3 +31,15 @@ process.on("close", function() {
 })
 
 timeline()
+
+/**
+ * 时间格式化工具
+ * @example 2017-07-13 00:00:00
+ */
+function formatDate(date, isDate) {
+    if (Object.prototype.toString.call(date) !== "[object Date]") {
+        throw new TypeError("date is not Date type");
+    }
+
+    return isDate?(date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate()):(date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds())
+}

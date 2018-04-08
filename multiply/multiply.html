@@ -62,16 +62,24 @@
 	 * f(t)表示抑制函数，抑制函数与上一时刻的空间状态都有关系
 	 */
 
+	 let k = 100; // 终值
+	 let r = -0.01;  // 变化速率
+	 let p0 = 0.1; // 初始值
 	// 抑制函数
-	function f(totalCount) {
-		if (totalCount === 0) return 0;
+	function f(t) {
+		if (t === 0) return 0;
+
+		// 逻辑斯蒂函数
+		return (k*p0*Math.exp(r*t))/(k+p0*(Math.exp(r*t)-1)); 
 
 		// 以自然对数函数作为抑制函数
-		return Math.round(Math.log(totalCount)*2/3);
+		// return Math.round(Math.log(t)*2/3);
 	}
-
+	var xc = 100;
 	// 增长函数
 	function x() {
+		// if (--xc===0) return ++xc;
+		return 10;
 		return Math.round(Math.random() * 10);
 	}
 	var totalCount = 0; // 空间状态，样本数量
@@ -109,7 +117,7 @@
 		setInterval(function() {
 			increment = x();
 			totalCount += increment;
-		}, 1000);
+		}, 100);
 
 
 	}
