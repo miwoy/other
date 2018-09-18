@@ -1,221 +1,132 @@
-var ini = {
-    eta: 0.25,
-    momentum: 0.9
-};
+var Neuron = require("./Neuron");
 
 /**
- * BPNN.
- * 
- * @author RenaQiu
- * 
+ * 前馈神经网络
+ * @param {[type]} option [description]
  */
-function BP(inputSize, hiddenSize, outputSize) {
-    /**
-     * input vector.
-     */
-    // private final double[] input;
-    this.input = new Array(inputSize + 1);
-    each(this.input, function(v, i) { this.input[i] = 0.0; }, this);
-    /**
-     * hidden layer.
-     */
-    //private final double[] hidden;
-    this.hidden = new Array(hiddenSize + 1);
-    each(this.hidden, function(v, i) { this.hidden[i] = 0.0; }, this);
-    /**
-     * output layer.
-     */
-    // private final double[] output;
-    this.output = new Array(outputSize + 1);
-    each(this.output, function(v, i) { this.output[i] = 0.0; }, this);
-    /**
-     * target.
-     */
-    // private final double[] target;
-    this.target = new Array(outputSize + 1);
-    each(this.target, function(v, i) { this.target[i] = 0.0; }, this);
+function BP(option) {
+    if (typeof option != 'object') throw new Error("option arg error.");
+    if (typeof option.iptLen != 'number') throw new Error("option.iptLen arg error.");
+    if (typeof option.hidLen != 'number') throw new Error("option.hidLen arg error.");
+    if (typeof option.optLen != 'number') throw new Error("option.optLen arg error.");
+    if (!(typeof option.errornum == 'number' && option.errornum > 0 && option.errornum < 1))
+        throw new Error("option.errornum arg error.");
 
-    /**
-     * delta vector of the hidden layer .
-     */
-    // private final double[] hidDelta;
-    this.hidDelta = new Array(hiddenSize + 1);
-    each(this.hidDelta, function(v, i) { this.hidDelta[i] = 0.0; }, this);
-    /**
-     * output layer of the output layer.
-     */
-    // private final double[] optDelta;
-    this.optDelta = new Array(outputSize + 1);
-    each(this.optDelta, function(v, i) { this.optDelta[i] = 0.0; }, this);
+    this.iptLen = option.iptLen;
+    this.hidLen = option.hidLen;
+    this.optLen = option.optLen;
 
+    this.output = new Array(this.optLen).fill(0).map(v => new Neuron());
+    this.hidden = new Array(this.hidLen).fill(0).map(v => new Neuron());
+    this.input = new Array(this.iptLen).fill(0).map(v => new Neuron());
 
-    /**
-     * learning rate.
-     */
-    // private final double eta;
-    this.eta = ini.eta;
-    /**
-     * momentum.
-     */
-    // private final double momentum;
-    this.momentum = ini.momentum;
+    this.errornum = option.errornum;
+    this.momentum = 0.1;
+    this.eta = 0.3;
 
-    /**
-     * weight matrix from input layer to hidden layer.
-     */
-    // private final double[][] iptHidWeights;
-    this.iptHidWeights = new Array(inputSize + 1);
-    each(this.iptHidWeights, function(v, i) {
-        this.iptHidWeights[i] = new Array(hiddenSize + 1);
-        each(this.iptHidWeights[i], function(v, j) { this.iptHidWeights[i][j] = 0.0; }, this);
-    }, this);
-    /**
-     * weight matrix from hidden layer to output layer.
-     */
-    // private final double[][] hidOptWeights;
-    this.hidOptWeights = new Array(hiddenSize + 1);
-    each(this.hidOptWeights, function(v, i) {
-        this.hidOptWeights[i] = new Array(outputSize + 1);
-        each(this.hidOptWeights[i], function(v, j) { this.hidOptWeights[i][j] = 0.0; }, this);
-    }, this);
+    this.output.map(optLayer => {
+        this.hidden.map(hidLayer => {
+            this.input.map(iptLayer => {
+                iptLayer.addDendrite(hidLayer);
+            });
+            hidLayer.addDendrite(optLayer);
+        });
+    });
 
-    /**
-     * previous weight update.
-     */
-    // private final double[][] iptHidPrevUptWeights;
-    this.iptHidPrevUptWeights = new Array(inputSize + 1);
-    each(this.iptHidPrevUptWeights, function(v, i) {
-        this.iptHidPrevUptWeights[i] = new Array(hiddenSize + 1);
-        each(this.iptHidPrevUptWeights[i], function(v, j) { this.iptHidPrevUptWeights[i][j] = 0.0; }, this);
-    }, this);
-    /**
-     * previous weight update.
-     */
-    // private final double[][] hidOptPrevUptWeights;
-    this.hidOptPrevUptWeights = new Array(hiddenSize + 1);
-    each(this.hidOptPrevUptWeights, function(v, i) {
-        this.hidOptPrevUptWeights[i] = new Array(outputSize + 1);
-        each(this.hidOptPrevUptWeights[i], function(v, j) { this.hidOptPrevUptWeights[i][j] = 0.0; }, this);
-    }, this);
+    function build() {
 
-    // public double optErrSum = 0d;
-    this.optErrSum = 0;
+    }
 
-    // public double hidErrSum = 0d;
-    this.hidErrSum = 0;
-
-
-    // private final Random random;
-    randomizeWeights(this.iptHidWeights);
-    randomizeWeights(this.hidOptWeights);
-
+    console.log(`神经网络已构建,输入层${this.iptLen},隐藏层${this.hidLen},输出层${this.optLen}`);
 }
 
-/**
- * Entry method. The train data should be a one-dim vector.
- * 
- * @param trainData  double[]
- * @param target  double[]
- */
-BP.prototype.train = function(trainData, target) {
-    this.loadInput(trainData);
-    this.loadTarget(target);
-    this.forward();
-    this.calculateDelta();
-    this.adjustWeight();
-};
-
-/**
- * Test the BPNN.
- * 
- * @param inData double[]
- * @return double[]
- */
-BP.prototype.test = function(inData) {
-    if (inData.length !== this.input.length - 1) {
-        throw new Error("Size Do Not Match.");
-    }
-    this.input = [this.input[0]].concat(inData);
-    this.forward();
-    return this.getNetworkOutput();
-};
-
-/**
- * Return the output layer.
- * 
- * @return double[]
- */
-BP.prototype.getNetworkOutput = function() {
-    var len = this.output.length;
-    var temp = new Array(len - 1);
-    for (var i = 1; i !== len; i++)
-        temp[i - 1] = this.output[i];
-    return temp;
-};
-
-/**
- * Load the target data.
- * 
- * @param arg double[] 
- */
-BP.prototype.loadTarget = function(arg) {
-    if (arg.length !== this.target.length - 1) {
-        throw new Error("Size Do Not Match.");
+BP.prototype.train = function(datas) {
+    let errornum = 0;
+    console.log("开始训练数据,数据长度为: " + datas.length)
+    while (true) {
+        datas.forEach((data) => {
+            this.forward(data.input);
+            errornum = this.outputErr(data.output);
+            this.hiddenErr();
+            this.adjustWeight();
+        });
+        
+        console.log("errornum:", errornum);
+        // console.log("layers:", this.getLayers())
+        // console.log("layers:", this.getLayer(2))
+        // console.log("weights:", this.getWeights());
+        if (errornum <= this.errornum) break;
     }
 
-    this.target = [this.target[0]].concat(arg);
 };
 
-/**
- * Load the training data.
- * 
- * @param inData
- */
-BP.prototype.loadInput = function(inData) {
-    if (inData.length !== this.input.length - 1) {
-        throw new Error("Size Do Not Match.");
-    }
-
-    this.input = [this.input[0]].concat(inData);
+BP.prototype.run = function(input) {
+    console.log("开始预测, 预测数据为: ");
+    console.log(input.join(","))
+    this.forward(input);
+    return this.getLayer(2);
 };
 
-/**
- * Forward.
- * 
- * @param layer0 double[] 
- * @param layer1 double[] 
- * @param weight double[][] 
- */
-BP.prototype._forward = function(layer0, layer1, weight) {
-    // threshold unit.
-    layer0[0] = 1.0;
-    for (var j = 1, len = layer1.length; j !== len; ++j) {
-        var sum = 0;
-        for (var i = 0, len2 = layer0.length; i !== len2; ++i)
-            sum += weight[i][j] * layer0[i];
-        layer1[j] = sigmoid(sum);
-    }
+BP.prototype.getLayer = function(level) {
+    return this.getLayers()[level];
 };
 
-/**
- * Forward.
- */
-BP.prototype.forward = function() {
-    this._forward(this.input, this.hidden, this.iptHidWeights);
-    this._forward(this.hidden, this.output, this.hidOptWeights);
-};
+BP.prototype.getLayers = function() {
+    let layers = [];
+    
+    layers.push(this.input.map(layer => {
+        return layer.value;
+    }));
+    layers.push(this.hidden.map(layer => {
+        return layer.value;
+    }));
+    layers.push(this.output.map(layer => {
+        return layer.value;
+    }));
+
+    return layers;
+}
+
+BP.prototype.getWeights = function() {
+    let weights = [];
+    weights.push(this.output.map(layer => {
+        weights.push(this.hidden.map(layer => {
+            weights.push(this.input.map(layer => {
+                return Object.values(layer.dendrites).map(dendrite => {
+                    return dendrite.weight;
+                });
+            }));
+            return Object.values(layer.dendrites).map(dendrite => {
+                return dendrite.weight;
+            });
+        }));
+        return Object.values(layer.dendrites).map(dendrite => {
+            return dendrite.weight;
+        });
+    }));
+
+    return weights;
+}
+
+BP.prototype.forward = function(iptData) {
+    this.input.map((n, i) => {
+        n.receive(iptData[i]);
+    });
+}
+
 
 /**
  * Calculate output error.
  */
-BP.prototype.outputErr = function() {
+BP.prototype.outputErr = function(target) {
     var errSum = 0;
-    for (var idx = 1, len = this.optDelta.length; idx !== len; ++idx) {
-        var o = this.output[idx];
-        this.optDelta[idx] = o * (1 - o) * (this.target[idx] - o);
-        errSum += Math.abs(this.optDelta[idx]);
+    for (var i = 0; i < this.optLen; i++) {
+        var o = this.output[i].value;
+        this.output[i].delta = o * (1 - o) * (target[i] - o);
+        errSum += Math.abs(this.output[i].delta);
     }
-    this.optErrSum = errSum;
+
+    return errSum;
 };
 
 /**
@@ -223,40 +134,29 @@ BP.prototype.outputErr = function() {
  */
 BP.prototype.hiddenErr = function() {
     var errSum = 0;
-    for (var j = 1, len = this.hidDelta.length; j !== len; ++j) {
-        var o = this.hidden[j];
+    for (var i = 0; i < this.hidLen; i++) {
+        var o = this.hidden[i].value;
         var sum = 0;
-        for (var k = 1, len2 = this.optDelta.length; k !== len2; ++k)
-            sum += this.hidOptWeights[j][k] * this.optDelta[k];
-        this.hidDelta[j] = o * (1 - o) * sum;
-        errSum += Math.abs(this.hidDelta[j]);
+        var dendrites = Object.values(this.hidden[i].dendrites);
+        for (var j = 0; j < this.optLen; j++)
+            sum += dendrites[j].weight * dendrites[j].connectNeuron.delta;
+        this.hidden[i].delta = o * (1 - o) * sum;
+        errSum += Math.abs(this.hidden[i].delta);
     }
-    this.hidErrSum = errSum;
+    return errSum;
 };
 
 /**
- * Calculate errors of all layers.
+ * 调整权重
+ * @param {Array} layer 层
  */
-BP.prototype.calculateDelta = function() {
-    this.outputErr();
-    this.hiddenErr();
-};
-
-/**
- * Adjust the weight matrix.
- * 
- * @param delta double[] 
- * @param layer double[] 
- * @param weight double[][] 
- * @param prevWeight double[][] 
- */
-BP.prototype._adjustWeight = function(delta, layer, weight, prevWeight) {
-    layer[0] = 1;
-    for (var i = 1, len = delta.length; i !== len; ++i) {
-        for (var j = 0, len2 = layer.length; j !== len2; ++j) {
-            var newVal = this.momentum * prevWeight[j][i] + this.eta * delta[i] * layer[j];
-            weight[j][i] += newVal;
-            prevWeight[j][i] = newVal;
+BP.prototype._adjustWeight = function(layer) {
+    for (var i = 0; i < layer.length; i++) {
+        let dendrites = Object.values(layer[i].axon.dendrites);
+        for (var j = 0; j < layer[i].axon.length; j++) {
+            var newVal = this.momentum * dendrites[j].prevWeight + this.eta * layer[i].delta * dendrites[j].neuron.value;
+            dendrites[j].weight += newVal;
+            dendrites[j].prevWeight = newVal;
         }
     }
 };
@@ -264,32 +164,11 @@ BP.prototype._adjustWeight = function(delta, layer, weight, prevWeight) {
 /**
  * Adjust all weight matrices.
  */
-BP.prototype.adjustWeight = function() {
-    this._adjustWeight(this.optDelta, this.hidden, this.hidOptWeights, this.hidOptPrevUptWeights);
-    this._adjustWeight(this.hidDelta, this.input, this.iptHidWeights, this.iptHidPrevUptWeights);
+BP.prototype.adjustWeight = function() { // 权重调整
+
+    this._adjustWeight(this.output);
+    this._adjustWeight(this.hidden);
+    
 };
-
-/**
- * Sigmoid.
- * 
- * @param val double
- * @return double
- */
-function sigmoid(val) {
-    return 1 / (1 + Math.exp(-val));
-}
-
-function randomizeWeights(matrix) {
-    for (var i = 0, len = matrix.length; i !== len; i++)
-        for (var j = 0, len2 = matrix[i].length; j !== len2; j++) {
-            matrix[i][j] = Math.random() * 2 - 1;
-        }
-}
-
-function each(array, callback, ctx) {
-    for (var i = 0; i < array.length; i++) {
-        callback.call(ctx, array[i], i);
-    }
-}
 
 module.exports = BP;
