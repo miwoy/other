@@ -8,9 +8,7 @@ const simpleCount = 1000;
 const trainCount = 200;
 
 var bp = new BP({
-    iptLen: 32,
-    hidLen: 15,
-    optLen: 4,
+	struct: [32, 15, 4],
     errornum: 0.0005
 });
 

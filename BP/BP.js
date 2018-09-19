@@ -37,6 +37,36 @@ function BP(option) {
 }
 
 /**
+ * [2,3,1]
+ * @param {[type]} option [description]
+ */
+function BP(option) {
+    this.struct = option.struct;
+
+    this.network = [];
+
+    for (let i = this.struct.length - 1; i >= 0; i--) {
+        let layer = new Array(this.struct[i]).fill(0).map(v => new Neuron());
+        if (this.network[0]) {
+            this.network[0].map(connectNeuron => {
+                layer.map(neuron => {
+                    neuron.addDendrite(connectNeuron);
+                });
+            })
+        }
+
+        this.network.unshift(layer);
+    }
+
+    this.errornum = option.errornum;
+    this.momentum = 0.1;
+    this.eta = 0.3;
+
+
+    console.log(`神经网络已构建,输入层${this.iptLen},隐藏层${this.hidLen},输出层${this.optLen}`);
+}
+
+/**
  * 训练函数
  * @param  datas = []
  * @param  datas[].input = [number]
@@ -46,13 +76,14 @@ BP.prototype.train = function(datas) {
     let errornum = 0;
     console.log("开始训练数据,数据长度为: " + datas.length)
     while (true) {
+        let errSum = 0;
+        let errAvg = 0;
         datas.forEach((data) => {
             this.forward(data.input);
-            errornum = this.outputErr(data.output);
-            this.hiddenErr();
+            errornum =  this.calculateErr(data.output);
             this.adjustWeight();
         });
-        
+        errAvg = errSum/datas.length
         console.log("errornum:", errornum);
         // console.log("layers:", this.getLayers())
         // console.log("layers:", this.getLayer(2))
@@ -78,50 +109,28 @@ BP.prototype.run = function(input) {
  * @param  level = number  层索引
  */
 BP.prototype.getLayer = function(level) {
-    return this.getLayers()[level];
+    return this.network[level].map(neuron=> neuron.value);
 };
 
 /**
  * 获取所有层信号值，从上至下
  */
 BP.prototype.getLayers = function() {
-    let layers = [];
-    
-    layers.push(this.input.map(layer => {
-        return layer.value;
-    }));
-    layers.push(this.hidden.map(layer => {
-        return layer.value;
-    }));
-    layers.push(this.output.map(layer => {
-        return layer.value;
-    }));
+    return this.network.map(layer => layer.map(neuron=> neuron.value));
+}
 
-    return layers;
+/**
+ * 获取单独层的树突权重(损失量)
+ */
+BP.prototype.getWeights = function(level) {
+    return this.network[level].map(neuron=> Object.values(neuron.dendrites).map(dendrite=>dendrite.weight));
 }
 
 /**
  * 获取所有层的树突权重(损失量)
  */
 BP.prototype.getWeights = function() {
-    let weights = [];
-    weights.push(this.output.map(layer => {
-        weights.push(this.hidden.map(layer => {
-            weights.push(this.input.map(layer => {
-                return Object.values(layer.dendrites).map(dendrite => {
-                    return dendrite.weight;
-                });
-            }));
-            return Object.values(layer.dendrites).map(dendrite => {
-                return dendrite.weight;
-            });
-        }));
-        return Object.values(layer.dendrites).map(dendrite => {
-            return dendrite.weight;
-        });
-    }));
-
-    return weights;
+    return this.network.map(layer=>layer.map(neuron=> Object.values(neuron.dendrites).map(dendrite=>dendrite.weight)));
 }
 
 /**
@@ -129,42 +138,39 @@ BP.prototype.getWeights = function() {
  * @param  iptData = [number] 输入层获取的数据
  */
 BP.prototype.forward = function(iptData) {
-    this.input.map((n, i) => {
+    this.network[0].map((n, i) => {
         n.receive(iptData[i]);
     });
 }
 
 
-/**
- * 计算输出层误差值，用于反向传播算法调整权重
- */
-BP.prototype.outputErr = function(target) {
-    var errSum = 0;
-    for (var i = 0; i < this.optLen; i++) {
-        var o = this.output[i].value;
-        this.output[i].delta = o * (1 - o) * (target[i] - o);
-        errSum += Math.abs(this.output[i].delta);
+BP.prototype._calculateErr = function(layer, errnums) {
+    var errnum = 0;
+    for (var i = 0; i < layer.length; i++) {
+        var o = layer[i].value;
+
+        var dendrites = Object.values(layer[i].dendrites);
+        layer[i].delta = o * (1 - o) * errnums[i];
+        errnum += Math.abs(layer[i].delta);
+    }
+    return errnum;
+}
+
+BP.prototype.calculateErr = function(target) {
+    let errnum, result;
+    let errnums = this.network[this.network.length - 1].map((neuron, i) => {
+        return target[i] - neuron.value;
+    });
+
+    for (let i = this.network.length - 1; i > 0; i--) {
+        errnum = this._calculateErr(this.network[i], errnums);
+        errnums = new Array(this.network[i - 1].length).fill(errnum);
+        if (i == this.network.length - 1) result = errnum;
+        // console.log(`第${i+1}层误差值:${errnum}`)
     }
 
-    return errSum; // 总误差值
-};
-
-/**
- * 计算隐藏层误差值，用于反向传播算法调整权重
- */
-BP.prototype.hiddenErr = function() {
-    var errSum = 0;
-    for (var i = 0; i < this.hidLen; i++) {
-        var o = this.hidden[i].value;
-        var sum = 0;
-        var dendrites = Object.values(this.hidden[i].dendrites);
-        for (var j = 0; j < this.optLen; j++)
-            sum += dendrites[j].weight * dendrites[j].connectNeuron.delta;
-        this.hidden[i].delta = o * (1 - o) * sum;
-        errSum += Math.abs(this.hidden[i].delta);
-    }
-    return errSum;
-};
+    return result;
+}
 
 /**
  * 调整权重实现
@@ -177,6 +183,7 @@ BP.prototype._adjustWeight = function(layer) {
             var newVal = this.momentum * dendrites[j].prevWeight + this.eta * layer[i].delta * dendrites[j].neuron.value;
             dendrites[j].weight += newVal;
             dendrites[j].prevWeight = newVal;
+
         }
     }
 };
@@ -185,10 +192,9 @@ BP.prototype._adjustWeight = function(layer) {
  * 调整权重调用
  */
 BP.prototype.adjustWeight = function() {
-
-    this._adjustWeight(this.output);
-    this._adjustWeight(this.hidden);
-    
+    for (let i = this.network.length - 1; i >= 0; i--) {
+        this._adjustWeight(this.network[i]);
+    }
 };
 
 module.exports = BP;
