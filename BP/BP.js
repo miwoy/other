@@ -2,47 +2,22 @@ var Neuron = require("./Neuron");
 
 /**
  * 前馈神经网络
- * @param {[type]} option [description]
+ * @example
+ * option = {
+ *     errornum: 0.005,
+ *     momentum: 0.1,
+ *     eta: option.eta || 0.3
+ *     strcut: [2, 3, 1]
+ * }
  */
 function BP(option) {
     if (typeof option != 'object') throw new Error("option arg error.");
-    if (typeof option.iptLen != 'number') throw new Error("option.iptLen arg error.");
-    if (typeof option.hidLen != 'number') throw new Error("option.hidLen arg error.");
-    if (typeof option.optLen != 'number') throw new Error("option.optLen arg error.");
+    if (typeof option.struct != 'object' || option.struct.length < 2)
+        throw new Error("option.struct arg error.");
     if (!(typeof option.errornum == 'number' && option.errornum > 0 && option.errornum < 1))
         throw new Error("option.errornum arg error.");
 
-    this.iptLen = option.iptLen;
-    this.hidLen = option.hidLen;
-    this.optLen = option.optLen;
-
-    this.output = new Array(this.optLen).fill(0).map(v => new Neuron());
-    this.hidden = new Array(this.hidLen).fill(0).map(v => new Neuron());
-    this.input = new Array(this.iptLen).fill(0).map(v => new Neuron());
-
-    this.errornum = option.errornum;
-    this.momentum = 0.1;
-    this.eta = 0.3;
-
-    this.output.map(optLayer => {
-        this.hidden.map(hidLayer => {
-            this.input.map(iptLayer => {
-                iptLayer.addDendrite(hidLayer);
-            });
-            hidLayer.addDendrite(optLayer);
-        });
-    });
-
-    console.log(`神经网络已构建,输入层${this.iptLen},隐藏层${this.hidLen},输出层${this.optLen}`);
-}
-
-/**
- * [2,3,1]
- * @param {[type]} option [description]
- */
-function BP(option) {
     this.struct = option.struct;
-
     this.network = [];
 
     for (let i = this.struct.length - 1; i >= 0; i--) {
@@ -52,18 +27,27 @@ function BP(option) {
                 layer.map(neuron => {
                     neuron.addDendrite(connectNeuron);
                 });
-            })
+            });
         }
 
         this.network.unshift(layer);
     }
 
+    // 处理截距(failed)
+    // for (let i = 0; i < this.network.length - 1; i++) {
+    //     let neuron = new Neuron(true);
+    //     this.network[i + 1].map(connectNeuron => {
+    //         neuron.addDendrite(connectNeuron);
+    //     });
+    //     this.network[i].push(neuron);
+    // }
+
     this.errornum = option.errornum;
-    this.momentum = 0.1;
-    this.eta = 0.3;
+    this.momentum = option.momentum || 0.1;
+    this.eta = option.eta || 0.3;
 
 
-    console.log(`神经网络已构建,输入层${this.iptLen},隐藏层${this.hidLen},输出层${this.optLen}`);
+    console.log(`神经网络已构建`);
 }
 
 /**
@@ -74,21 +58,24 @@ function BP(option) {
  */
 BP.prototype.train = function(datas) {
     console.log("开始训练数据,数据长度为: " + datas.length)
+    let count = 1;
     while (true) {
         let errSum = 0;
         let errAvg = 0;
         datas.forEach((data) => {
             this.forward(data.input);
-            errSum +=  this.calculateErr(data.output);
+            errSum += this.calculateErr(data.output);
             this.adjustWeight();
         });
-        errAvg = errSum/datas.length
+        errAvg = errSum / datas.length
         console.log("errornum:", errAvg);
         // console.log("layers:", this.getLayers())
-        // console.log("layers:", this.getLayer(2))
         // console.log("weights:", this.getWeights());
         if (errAvg <= this.errornum) break;
+        if (count===0) break;
     }
+
+
 
 };
 
@@ -98,39 +85,9 @@ BP.prototype.train = function(datas) {
  */
 BP.prototype.run = function(input) {
     console.log("开始预测, 预测数据为: ");
-    console.log(input.join(","))
     this.forward(input);
     return this.getLayer(2);
 };
-
-/**
- * 获取层信号值
- * @param  level = number  层索引
- */
-BP.prototype.getLayer = function(level) {
-    return this.network[level].map(neuron=> neuron.value);
-};
-
-/**
- * 获取所有层信号值，从上至下
- */
-BP.prototype.getLayers = function() {
-    return this.network.map(layer => layer.map(neuron=> neuron.value));
-}
-
-/**
- * 获取单独层的树突权重(损失量)
- */
-BP.prototype.getWeights = function(level) {
-    return this.network[level].map(neuron=> Object.values(neuron.dendrites).map(dendrite=>dendrite.weight));
-}
-
-/**
- * 获取所有层的树突权重(损失量)
- */
-BP.prototype.getWeights = function() {
-    return this.network.map(layer=>layer.map(neuron=> Object.values(neuron.dendrites).map(dendrite=>dendrite.weight)));
-}
 
 /**
  * 内部函数，信号从输入层向前传导
@@ -151,18 +108,18 @@ BP.prototype._calculateErr = function(layer, target) {
 
         let x = 0;
         if (dendrites.length === 0) {
-            x = target[i]- o; // 输出层误差计算
-            
+            x = target[i] - o; // 输出层误差计算
+
         } else {
-            x = dendrites.reduce((total, dendrite)=>{
+            x = dendrites.reduce((total, dendrite) => {
                 total += dendrite.weight * dendrite.connectNeuron.delta;
                 return total;
             }, 0); // 其他隐藏层误差计算
-            
+
         }
 
         layer[i].delta = o * (1 - o) * x;
-        errnum += Math.abs(layer[i].delta);  
+        errnum += Math.abs(layer[i].delta);
     }
 
     return errnum;
@@ -204,5 +161,34 @@ BP.prototype.adjustWeight = function() {
         this._adjustWeight(this.network[i]);
     }
 };
+
+/**
+ * 获取层信号值
+ * @param  level = number  层索引
+ */
+BP.prototype.getLayer = function(level) {
+    return this.network[level].map(neuron => neuron.value);
+};
+
+/**
+ * 获取所有层信号值，从上至下
+ */
+BP.prototype.getLayers = function() {
+    return this.network.map(layer => layer.map(neuron => neuron.value));
+}
+
+/**
+ * 获取单独层的树突权重(损失量)
+ */
+BP.prototype.getWeights = function(level) {
+    return this.network[level].map(neuron => Object.values(neuron.dendrites).map(dendrite => dendrite.weight));
+}
+
+/**
+ * 获取所有层的树突权重(损失量)
+ */
+BP.prototype.getWeights = function() {
+    return this.network.map(layer => layer.map(neuron => Object.values(neuron.dendrites).map(dendrite => dendrite.weight)));
+}
 
 module.exports = BP;
