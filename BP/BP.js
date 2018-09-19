@@ -73,22 +73,21 @@ function BP(option) {
  * @param  datas[].output = [number]
  */
 BP.prototype.train = function(datas) {
-    let errornum = 0;
     console.log("开始训练数据,数据长度为: " + datas.length)
     while (true) {
         let errSum = 0;
         let errAvg = 0;
         datas.forEach((data) => {
             this.forward(data.input);
-            errornum =  this.calculateErr(data.output);
+            errSum +=  this.calculateErr(data.output);
             this.adjustWeight();
         });
         errAvg = errSum/datas.length
-        console.log("errornum:", errornum);
+        console.log("errornum:", errAvg);
         // console.log("layers:", this.getLayers())
         // console.log("layers:", this.getLayer(2))
         // console.log("weights:", this.getWeights());
-        if (errornum <= this.errornum) break;
+        if (errAvg <= this.errornum) break;
     }
 
 };
@@ -144,27 +143,36 @@ BP.prototype.forward = function(iptData) {
 }
 
 
-BP.prototype._calculateErr = function(layer, errnums) {
+BP.prototype._calculateErr = function(layer, target) {
     var errnum = 0;
     for (var i = 0; i < layer.length; i++) {
         var o = layer[i].value;
-
         var dendrites = Object.values(layer[i].dendrites);
-        layer[i].delta = o * (1 - o) * errnums[i];
-        errnum += Math.abs(layer[i].delta);
+
+        let x = 0;
+        if (dendrites.length === 0) {
+            x = target[i]- o; // 输出层误差计算
+            
+        } else {
+            x = dendrites.reduce((total, dendrite)=>{
+                total += dendrite.weight * dendrite.connectNeuron.delta;
+                return total;
+            }, 0); // 其他隐藏层误差计算
+            
+        }
+
+        layer[i].delta = o * (1 - o) * x;
+        errnum += Math.abs(layer[i].delta);  
     }
+
     return errnum;
 }
 
 BP.prototype.calculateErr = function(target) {
     let errnum, result;
-    let errnums = this.network[this.network.length - 1].map((neuron, i) => {
-        return target[i] - neuron.value;
-    });
 
     for (let i = this.network.length - 1; i > 0; i--) {
-        errnum = this._calculateErr(this.network[i], errnums);
-        errnums = new Array(this.network[i - 1].length).fill(errnum);
+        errnum = this._calculateErr(this.network[i], target);
         if (i == this.network.length - 1) result = errnum;
         // console.log(`第${i+1}层误差值:${errnum}`)
     }
