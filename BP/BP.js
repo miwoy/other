@@ -33,13 +33,15 @@ function BP(option) {
         });
     });
 
-    function build() {
-
-    }
-
     console.log(`神经网络已构建,输入层${this.iptLen},隐藏层${this.hidLen},输出层${this.optLen}`);
 }
 
+/**
+ * 训练函数
+ * @param  datas = []
+ * @param  datas[].input = [number]
+ * @param  datas[].output = [number]
+ */
 BP.prototype.train = function(datas) {
     let errornum = 0;
     console.log("开始训练数据,数据长度为: " + datas.length)
@@ -60,6 +62,10 @@ BP.prototype.train = function(datas) {
 
 };
 
+/**
+ * 测试函数
+ * @param  input = [number]
+ */
 BP.prototype.run = function(input) {
     console.log("开始预测, 预测数据为: ");
     console.log(input.join(","))
@@ -67,10 +73,17 @@ BP.prototype.run = function(input) {
     return this.getLayer(2);
 };
 
+/**
+ * 获取层信号值
+ * @param  level = number  层索引
+ */
 BP.prototype.getLayer = function(level) {
     return this.getLayers()[level];
 };
 
+/**
+ * 获取所有层信号值，从上至下
+ */
 BP.prototype.getLayers = function() {
     let layers = [];
     
@@ -87,6 +100,9 @@ BP.prototype.getLayers = function() {
     return layers;
 }
 
+/**
+ * 获取所有层的树突权重(损失量)
+ */
 BP.prototype.getWeights = function() {
     let weights = [];
     weights.push(this.output.map(layer => {
@@ -108,6 +124,10 @@ BP.prototype.getWeights = function() {
     return weights;
 }
 
+/**
+ * 内部函数，信号从输入层向前传导
+ * @param  iptData = [number] 输入层获取的数据
+ */
 BP.prototype.forward = function(iptData) {
     this.input.map((n, i) => {
         n.receive(iptData[i]);
@@ -116,7 +136,7 @@ BP.prototype.forward = function(iptData) {
 
 
 /**
- * Calculate output error.
+ * 计算输出层误差值，用于反向传播算法调整权重
  */
 BP.prototype.outputErr = function(target) {
     var errSum = 0;
@@ -126,11 +146,11 @@ BP.prototype.outputErr = function(target) {
         errSum += Math.abs(this.output[i].delta);
     }
 
-    return errSum;
+    return errSum; // 总误差值
 };
 
 /**
- * Calculate hidden errors.
+ * 计算隐藏层误差值，用于反向传播算法调整权重
  */
 BP.prototype.hiddenErr = function() {
     var errSum = 0;
@@ -147,8 +167,8 @@ BP.prototype.hiddenErr = function() {
 };
 
 /**
- * 调整权重
- * @param {Array} layer 层
+ * 调整权重实现
+ * @param layer = [] 层
  */
 BP.prototype._adjustWeight = function(layer) {
     for (var i = 0; i < layer.length; i++) {
@@ -162,9 +182,9 @@ BP.prototype._adjustWeight = function(layer) {
 };
 
 /**
- * Adjust all weight matrices.
+ * 调整权重调用
  */
-BP.prototype.adjustWeight = function() { // 权重调整
+BP.prototype.adjustWeight = function() {
 
     this._adjustWeight(this.output);
     this._adjustWeight(this.hidden);
