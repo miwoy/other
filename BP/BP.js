@@ -44,7 +44,7 @@ function BP(option) {
 
     this.errornum = option.errornum;
     this.momentum = option.momentum || 0.1;
-    this.eta = option.eta || 0.3;
+    this.eta = option.eta || 0.5;
 
 
     console.log(`神经网络已构建`);
@@ -86,7 +86,7 @@ BP.prototype.train = function(datas) {
 BP.prototype.run = function(input) {
     console.log("开始预测, 预测数据为: ");
     this.forward(input);
-    return this.getLayer(2);
+    return this.getLayer(this.network.length-1);
 };
 
 /**
