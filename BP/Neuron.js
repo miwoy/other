@@ -6,7 +6,7 @@ var uuid = require("node-uuid");
  */
 function Neuron() {
 	this.id = uuid.v4(); // 神经元唯一标识
-	this.value = 0; // 兴奋状态，向下传递
+	this.value = 0; // 信号值，向下传递
 	this.dendrites = {}; // 拥有的树突数量
 	this.axon = { length: 0, dendrites: {} }; // 连接树突的数量
 	this.signalCount = 0; // 信号数量，用来判断是否已经接受完全部上层信号（可优化，信号逐步式传递）
@@ -37,7 +37,7 @@ Neuron.prototype.addDendrite = function(connectNeuron) {
  */
 Neuron.prototype.receive = function(value) {
 
-	if (this.signalCount >= this.axon.length) {
+	if (this.signalCount >= this.axon.length) { // 下一次接受信号时，先初始化考量参数
 		this.value = 0;
 		this.signalCount = 0;
 	}
