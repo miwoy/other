@@ -26,7 +26,7 @@
  */
 
 // const testData = [[1,2],[5,3],[7,8],[2,5],[2,3],[3,3],[3,5],[8,4],[4,3],[3,1],[2,7]];
-const testData = ["三生三世", "世界和平", "平白无故",  "平平无奇", "奇思妙想", "想入非非", "非你莫属",  "故弄玄虚"];
+const testData = require("./test.json");
 
 /**
   * 分析与思路
@@ -116,7 +116,7 @@ const testData = ["三生三世", "世界和平", "平白无故",  "平平无奇
     return maxLenPath.map(v=>v.originV);
   }
 
- console.log(treeMaxPath(testData));
+//  console.log(treeMaxPath(testData));
 
  /**
   * 可优化部分
@@ -133,23 +133,35 @@ const testData = ["三生三世", "世界和平", "平白无故",  "平平无奇
  */
 
 let maxLenPath = [];
-
-function calculate(nodes, path) {
-    nodes.map(v=> {
-        let _path = path.concat([]);
-        _path.push(v);
-        let children = testData.filter(cv=>{
-            return v[v.length-1]==cv[0] && _path.indexOf(cv)<0;
-        });
+let count = 0;
+function calculate(nodes, allNode, path) {
+    let len = nodes.length;
+    for (let i=len-1; i>=0; i--) {
+        let index = allNode.indexOf(nodes[i]);
+        let node = allNode.splice(index, 1)[0];
+        path.push(node);
+        count++
+        let children = allNode.filter(v=>v[0]==node[node.length-1]);
         if (children.length===0) {
-            if (_path.length>maxLenPath.length) {
-                maxLenPath = _path;
+            if (path.length>maxLenPath.length) {
+                maxLenPath = path.concat([]);
             }
         } else {
-            calculate(children, _path);
-
+            calculate(children, allNode, path);
         }
-    });
+
+        path.pop();
+        allNode.splice(index, 0, node);
+    }
 }
-calculate(testData, [])
+console.time("耗时：");
+calculate(testData, testData, [])
+console.timeEnd("耗时：");
 console.log(maxLenPath);
+
+// for(let i=580;i<testData.length;i++) {
+//     console.time(i+"条数据，耗时：");
+//     calculate(testData.slice(0,i), testData.slice(0,i), [])
+//     console.timeEnd(i+"条数据，耗时：");
+//     console.log("结果长度："+maxLenPath.length,count);
+// }
