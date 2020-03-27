@@ -1,5 +1,22 @@
-#!/usr/bin/env node
+/**
+ * 问题描述
+ * 我们有不同高度的挡板，用数组表示
+ * 示例 [2,5,1,2,3,4,7]
+ * 如下图 
+ *             |
+ *             |
+ *   |         |
+ *   |         |
+ *   |     | | |
+ * | |   | | | |
+ * | | | | | | |
+ * 假如开始下雨了，那么挡板之间能够存多少水呢？
+ */
 
+/**
+ * 最精简的双指针法
+ * 从数组左右两边同时遍历
+ */
 let calculate = function(arry) {
     let max = [arry.shift(), arry.pop()]; // 0 最左 1 最右
     let result = 0; // 结果
@@ -21,22 +38,9 @@ let calculate = function(arry) {
 
 
 
-
-
-
-
-let baseArr = [];
-let baseArr1 = [];
-
-for (var i = 0; i <= 10; i++) {
-    let num = parseInt(Math.random() * 10);
-    baseArr.push(num);
-    baseArr1.push(num);
-}
-console.log(baseArr)
-console.log("self", calculate(baseArr1))
-
-let sum = 0
+/**
+ * 最符合直观思路的填补法
+ */
 
 /**
  * arr中相邻值去重
@@ -63,7 +67,7 @@ const handler = (num, preNum) => {
          * example: [3,0,3,5,5] => [3,0,3,3,3]
          */
         baseArr = baseArr.map(value => value === preNum ? num : value)
-        console.log(baseArr)
+        // console.log(baseArr)
     }
 
     /**
@@ -95,15 +99,38 @@ const handler = (num, preNum) => {
     })
 }
 
+
+
+/**
+ * 测试
+ */
+let baseArr = [];
+let baseArr1 = [];
+
+for (var i = 0; i <= 1000000; i++) {
+    let num = parseInt(Math.random() * 10);
+    baseArr.push(num);
+    baseArr1.push(num);
+}
+
+console.time("双指针法用时");
+console.log("self", calculate(baseArr1))
+console.timeEnd("双指针法用时");
+
+let sum = 0
 const main = () => {
     // 得到所有出现过的数字，按从大到小排列
     let numArr = Array.from(new Set(baseArr)).sort((a, b) => b - a)
-    console.log(numArr)
+
     // 处理所有出现过的数字
     numArr.forEach((num, index) => handler(num, numArr[index - 1]))
 
     // print
     console.log(sum)
 }
+console.time("填补法用时");
+main();
+console.timeEnd("填补法用时");
 
-main()
+
+
