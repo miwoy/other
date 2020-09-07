@@ -7,7 +7,7 @@
 
 
 function s1(data) {
-    let col = 3000
+    let col = 9000
     let total = 0
     let max = 1000000000
     let vol = 0
@@ -36,7 +36,7 @@ function s2(data) {
 }
 
 function s3(data) {
-    let col = 1000
+    let col = 2000
     let total = 0
     let max = 1000000000
     let vol = 0
