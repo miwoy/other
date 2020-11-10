@@ -1,0 +1,23 @@
+{
+  "name": "other",
+  "version": "1.0.0",
+  "description": "杂乱的东西",
+  "main": "snake.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miwoy/other.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/miwoy/other/issues"
+  },
+  "homepage": "https://github.com/miwoy/other#readme",
+  "dependencies": {
+    "matplotnode": "^0.4.2",
+    "uuid": "^8.3.1"
+  }
+}
