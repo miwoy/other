@@ -4,9 +4,7 @@ function RanSeTi(ranSeTiCount) {
     this.jiYinZu = ""; // 基因组字符串
     this.length = ranSeTiCount; // 基因组位数
     this.shiYongXing = 0.0; // 适用性分数
-    for (var i = 0; i < ranSeTiCount/2; ++i) {
-        this.jiYinZu += (Array(2).join("0") + (Math.round(Math.random() * 4)).toString(2)).slice(-2);
-    }
+    this.jiYinZu = (Math.round(Math.random() * (2**ranSeTiCount-1))).toString(2).padStart(ranSeTiCount,0) 
 }
 
 // 群
@@ -22,7 +20,7 @@ var bianYi = function(bianYiLv, ranSeTi) {
     var _jiYinZu = ranSeTi.jiYinZu.split("");
     for (var i = _jiYinZu.length - 1; i >= 0; i--) {
         if (Math.random() <= bianYiLv) {
-            _jiYinZu[i] = _jiYinZu[i] === "0" ? "1" : "0";
+            _jiYinZu[i] = _jiYinZu[i]^1 
         }
     }
     ranSeTi.jiYinZu = _jiYinZu.join("");
