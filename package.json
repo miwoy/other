@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/miwoy/other#readme",
   "dependencies": {
+    "debug": "^4.3.1",
     "matplotnode": "^0.4.2",
+    "request": "^2.88.2",
     "uuid": "^8.3.1"
   }
 }

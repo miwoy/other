@@ -51,7 +51,7 @@ for (var j = 0; j < list.length; j++) {
     datas.push({ input: value.binary, output: value.real });
 }
 bp.train(datas);
-
+console.log(bp.getLayers())
 console.log("训练完毕，下面请输入一个任意数字，神经网络将自动判断它是正数还是复数，奇数还是偶数。");
 
 // var input = new Array(10);

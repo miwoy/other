@@ -20,17 +20,30 @@ function BP(option) {
     this.struct = option.struct;
     this.network = [];
 
-    for (let i = this.struct.length - 1; i >= 0; i--) {
+    // for (let i = this.struct.length - 1; i >= 0; i--) {
+    //     let layer = new Array(this.struct[i]).fill(0).map(v => new Neuron());
+    //     if (this.network[0]) {
+    //         this.network[0].map(connectNeuron => {
+    //             layer.map(neuron => {
+    //                 neuron.addDendrite(connectNeuron);
+    //             });
+    //         });
+    //     }
+
+    //     this.network.unshift(layer);
+    // }
+
+    for (let i = 0; i < this.struct.length; i++) {
         let layer = new Array(this.struct[i]).fill(0).map(v => new Neuron());
         if (this.network[0]) {
-            this.network[0].map(connectNeuron => {
+            this.network[this.network.length-1].map(connectNeuron => {
                 layer.map(neuron => {
-                    neuron.addDendrite(connectNeuron);
+                    neuron.addDendrite(connectNeuron.axon);
                 });
             });
         }
 
-        this.network.unshift(layer);
+        this.network.push(layer);
     }
 
     // 处理截距(failed)
@@ -95,16 +108,18 @@ BP.prototype.run = function(input) {
  */
 BP.prototype.forward = function(iptData) {
     this.network[0].map((n, i) => {
-        n.receive(iptData[i]);
+        n.transfer(iptData[i]);
     });
 }
 
-
+/**
+ * 误差计算，反向传播
+ */
 BP.prototype._calculateErr = function(layer, target) {
     var errnum = 0;
     for (var i = 0; i < layer.length; i++) {
-        var o = layer[i].value;
-        var dendrites = Object.values(layer[i].dendrites);
+        var o = layer[i].axon.value;
+        var dendrites = layer[i].axon.dendrites;
 
         let x = 0;
         if (dendrites.length === 0) {
@@ -112,7 +127,7 @@ BP.prototype._calculateErr = function(layer, target) {
 
         } else {
             x = dendrites.reduce((total, dendrite) => {
-                total += dendrite.weight * dendrite.connectNeuron.delta;
+                total += dendrite.weight * dendrite.neuron.delta;
                 return total;
             }, 0); // 其他隐藏层误差计算
 
@@ -143,9 +158,9 @@ BP.prototype.calculateErr = function(target) {
  */
 BP.prototype._adjustWeight = function(layer) {
     for (var i = 0; i < layer.length; i++) {
-        let dendrites = Object.values(layer[i].axon.dendrites);
-        for (var j = 0; j < layer[i].axon.length; j++) {
-            var newVal = this.momentum * dendrites[j].prevWeight + this.eta * layer[i].delta * dendrites[j].neuron.value;
+        let dendrites = layer[i].dendrites;
+        for (var j = 0; j < layer[i].dendrites.length; j++) {
+            var newVal = this.momentum * dendrites[j].prevWeight + this.eta * layer[i].delta * dendrites[j].axon.value;
             dendrites[j].weight += newVal;
             dendrites[j].prevWeight = newVal;
 

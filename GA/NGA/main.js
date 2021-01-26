@@ -28,7 +28,7 @@ class Context {
         this.mutationRate = opt.mutationRate || 0.001 // 变异率
         this.discardRate = 0.001
         this.rate = 1
-        this.finishRate = 1
+        this.finishRate = opt.finishRate || 1
         this.finished = false
     }
     /**
@@ -73,7 +73,7 @@ class Context {
     mutation(DNA) {
         for (let key in DNA) {
             if (Math.random() <= this.mutationRate) {
-                DNA[key] = DNA[key]^1 //Math.round((DNA[key] + (DNA[key] * (Math.random() - 0.5))) * this.bit) / this.bit
+                DNA[key] = Math.round((DNA[key] * (Math.random() + 0.5)) * this.bit) / this.bit
             }
         }
         return DNA;
@@ -218,21 +218,17 @@ class Entity {
              */
 
             let result = entity.context.validate(entity);
+            if (entity.context.finished) return
             console.log(`种群:${entity.context.popCount},第「${entity.dai}」「${Object.values(entity.DNA)}」验证得分:${result};目标得分:${entity.context.finishRate}`)
-            if (result === entity.context.finishRate) return entity.context.target = true;
-            if (--entity.num <= 0 || result < 0.1) return entity.context.destroy(entity.id);
+            if (result >= entity.context.finishRate) return entity.context.finished = true;
+            if (--entity.num <= 0) return entity.context.destroy(entity.id);
 
             entity.loveRate = result;
             setTimeout(function () {
                 entity.heredit();
-            });
-
-            if (entity.context.entities[entity.id]) {
                 entity.DNA = entity.context.mutation(entity.DNA);
-                setTimeout(function() {
-                    func(entity);
-                });
-            }
+                func(entity);
+            });
         };
 
         func(this)

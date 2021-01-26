@@ -41,7 +41,7 @@ context.validate = function(entity) {
 
 	if (num/length===1) {
 		console.timeEnd("耗时：");
-		console.log("success", entity);
+		console.log("success", Object.values(entity.DNA).join(","));
 	}
 	return num/length;
 };
