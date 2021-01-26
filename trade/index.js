@@ -16,14 +16,15 @@ let d2 = data.getCenter()
 let d3 = data.getDown()
 let ds = [formatData(sh601398),formatData(sz515030), formatData(sh600189), formatData(sz002142)]
 // ds = [formatData(sz515030)]
-let DNA = [3.00754416,0.15484771,0.0143154]
+let DNA = [3.94053988,0.04295361,0.00174166]
 let total = 20000 //20000 * (1 + DNA[0])
 let buyLever = DNA[0]
 let sellLever = DNA[1]
 let space = DNA[2]
 
 console.log(`【参数】总投入:${total},盈利空间:${space}`)
-ds.map((d) => {
+ds.map((d, i) => {
+    console.log("数据分组-"+(i+1))
     let strategy = new Strategy(d, {
         total,
         buyLever,

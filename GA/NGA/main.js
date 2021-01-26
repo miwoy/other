@@ -16,8 +16,6 @@ const debug = require('debug')("NGA")
  */
 
 
-// 环境对象，用于存储生成的实体
-
 class Context {
     constructor(opt) {
         this.entities = {} // 环境下所有实体
@@ -26,10 +24,18 @@ class Context {
         this.totalCount = opt.totalCount || Math.round(opt.DNALength / 0.382)
         this.bit = opt.bit || 1 // DNA 小数位
         this.mutationRate = opt.mutationRate || 0.001 // 变异率
-        this.discardRate = 0.001
+        this.discardRate = 0.01
         this.rate = 1
         this.finishRate = opt.finishRate || 1
+        this.totalRate = 0
         this.finished = false
+        this.timeout = opt.timeout || 0
+    }
+    sigmoid(val) {
+		return 1 / (1 + Math.exp(-val));
+	}
+    calculationMutationRate(rate) {
+        return  this.mutationRate // (1  / this.popCount * 10 ) / (rate/this.finishRate)
     }
     /**
      * ASIC-II 转换
@@ -60,8 +66,9 @@ class Context {
     }
     destroy(id) {
         debug(`开始销毁「${id}」...`);
-        delete this.entities[id];
+        this.totalRate -= this.entities[id].rate
         this.popCount--;
+        delete this.entities[id];
         debug(`销毁「${id}」完成。`);
     }
     addEntity(entity) {
@@ -70,10 +77,11 @@ class Context {
         debug(`新实体「${entity.id}」构建完成.`)
         debug(`种群数量: ${this.popCount}`)
     }
-    mutation(DNA) {
+    mutation(DNA, rate) {
+        let mutationRate = this.calculationMutationRate(rate)
         for (let key in DNA) {
-            if (Math.random() <= this.mutationRate) {
-                DNA[key] = Math.round((DNA[key] * (Math.random() + 0.5)) * this.bit) / this.bit
+            if (Math.random() <= mutationRate) {
+                DNA[key] =  Math.round((DNA[key] * (Math.random() + 0.5)) * this.bit) / this.bit
             }
         }
         return DNA;
@@ -104,15 +112,10 @@ class Context {
     roulette = function (key) {
         let random = Math.random()
         let temp = 0;
-        let totalRate = Object.keys(this.entities).reduce((totalRate, k) => {
-            if (k != key) {
-                totalRate += this.entities[k].loveRate
-            }
-            return totalRate
-        }, 0)
         for (let k in this.entities) {
+            temp += this.entities[k].rate / this.totalRate;
+            temp = isNaN(temp)?Infinity:temp
             if (k !== key) {
-                temp += this.entities[k].loveRate / totalRate;
                 if (temp >= random) {
                     return this.entities[k];
                 }
@@ -198,7 +201,7 @@ class Entity {
         this.num = 2 // 遗传计数
         this.age = 5 // 年龄计数
         this.dai = opt.dai
-        this.loveRate = 1 // 遗传概率
+        this.rate = 0 // 遗传概率
         this.context = opt.context
     }
     use() { // 实体生命周期
@@ -216,19 +219,18 @@ class Entity {
              * 评分越高配对机会越高
              * 
              */
-
-            let result = entity.context.validate(entity);
             if (entity.context.finished) return
-            console.log(`种群:${entity.context.popCount},第「${entity.dai}」「${Object.values(entity.DNA)}」验证得分:${result};目标得分:${entity.context.finishRate}`)
+            let result = entity.context.validate(entity);
             if (result >= entity.context.finishRate) return entity.context.finished = true;
             if (--entity.num <= 0) return entity.context.destroy(entity.id);
+            entity.context.totalRate += result - entity.rate
+            entity.rate = result;
 
-            entity.loveRate = result;
             setTimeout(function () {
                 entity.heredit();
-                entity.DNA = entity.context.mutation(entity.DNA);
+                entity.DNA = entity.context.mutation(entity.DNA, entity.rate);
                 func(entity);
-            });
+            }, entity.context.timeout);
         };
 
         func(this)
@@ -243,7 +245,7 @@ class Entity {
 
         // 生成_DNA
         debug("生成新的DNA成功。");
-        _DNA = this.context.mutation(_DNA);
+        _DNA = this.context.mutation(_DNA, (gamete.rate + this.rate) / 2);
         this.context.build(_DNA, this.dai + 1);
     }
 }
