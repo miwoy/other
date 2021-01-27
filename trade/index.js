@@ -6,30 +6,34 @@ const sz515030 = require("./data/515030.SZ.json")
 const sh601398 = require("./data/601398.SH.json")
 const sh600189 = require("./data/600189.SH.json")
 const sz002142 = require("./data/002142.SZ.json")
+const sz002149 = require("./data/002149.SZ.json")
 const {
     Context
 } = require("../GA/NGA/main")
 
-let data = new Data()
-let d1 = data.getUp()
-let d2 = data.getCenter()
-let d3 = data.getDown()
-let ds = [formatData(sh601398),formatData(sz515030), formatData(sh600189), formatData(sz002142)]
-// ds = [formatData(sz515030)]
-let DNA = [3.94053988,0.04295361,0.00174166]
-let total = 20000 //20000 * (1 + DNA[0])
-let buyLever = DNA[0]
-let sellLever = DNA[1]
-let space = DNA[2]
+let DNA = [3.66507803, 0.0001755, 0.24617066]
+let ds = [
+    ["sz002149", formatData(sz002149)],
+    ["sh600189", formatData(sh600189)],
+    ["sz002142", formatData(sz002142)]
+]
+// ds = [["sz002149", formatData(sz002149)]]
+let total = 20000 * (1+DNA[0])
+let buySpace = DNA[1]
+let sellSpace = DNA[2]
+let buyLever = DNA[3]
+let sellLever = DNA[4]
 
 console.log(`【参数】总投入:${total},盈利空间:${space}`)
-ds.map((d, i) => {
-    console.log("数据分组-"+(i+1))
+ds.map((dd, i) => {
+    console.log("数据分组-" + dd[0])
+    let d = dd[1]
     let strategy = new Strategy(d, {
         total,
         buyLever,
         sellLever,
-        space
+        buySpace,
+        sellSpace
     })
     let normal = new Normal(d, {
         total
@@ -37,17 +41,22 @@ ds.map((d, i) => {
     let dingtou = new Dingtou(d, {
         total
     })
-    normal.start()
-    dingtou.start()
     strategy.start()
+    dingtou.start()
+    normal.start()
     normal.end()
     dingtou.end()
     strategy.end()
 })
 
-
 function formatData(data) {
-    let pre_close = data[0][2]*1
+    data = JSON.parse(JSON.stringify(data))
+    return data.reverse().map(d => [d[2], d[3] / (d[2] - d[3])])
+}
+
+
+function formatData1(data) {
+    let pre_close = data[0][2] * 1
     return data.map(d => {
         d[2] = d[2] * 1
         let day = [d[2], (d[2] - pre_close) / pre_close]

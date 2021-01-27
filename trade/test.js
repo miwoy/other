@@ -2,18 +2,18 @@ const Data = require("./data")
 const Normal = require("./strategy/normal")
 const Strategy = require("./strategy/zzsd")
 const {Context} = require("../GA/NGA/main")
-const sz515030 = require("./data/515030.SZ.json")
+const sz002149 = require("./data/002149.SZ.json")
 const sh601398 = require("./data/601398.SH.json")
 const sh600189 = require("./data/600189.SH.json")
 const sz002142 = require("./data/002142.SZ.json")
-let ds = [sz515030, sh601398, sh600189, sz002142]
+let ds = [sz002149, sh601398, sh600189, sz002142]
 
 const total = 20000
 ds = ds.map(dd=>formatData(dd))
 
 const finishRate = 3
 let context =  new Context({
-	DNALength: 3,
+	DNALength: 5,
     bit: 100000000,
     finishRate,
     totalCount: 100,
@@ -22,14 +22,16 @@ let context =  new Context({
 
 context.validate = function(entity) {
     let DNA = entity.DNA
-    let total = 20000 
-    let buyLever = DNA[0]
-    let sellLever = DNA[1]
-    let space = DNA[2]
+    let total = 20000 * (1+DNA[0])
+    let buySpace = DNA[1]
+    let sellSpace = DNA[2]
+    let buyLever = DNA[3]
+    let sellLever = DNA[4]
     let avg = ds.map(d=> {
         let strategy = new Strategy(d, {
             total,
-            space,
+            buySpace,
+            sellSpace,
             buyLever,
             sellLever
         })
