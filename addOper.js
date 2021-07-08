@@ -25,7 +25,7 @@ function add(a, b) {
     let s = 0
     let r = [] // 结果寄存器
     for (let i = 7; i >= 0; i--) {
-        let _r = xor(a[i], b[i]) // 留位
+        let _r = xor(a[i], b[i]) // 本位
         _r = xor(_r, s)
 
         let _s = or(and(a[i], b[i]), and(a[i], s)) // 进位
@@ -41,6 +41,6 @@ function add(a, b) {
 }
 
 let a = 127,
-    b = 127
+    b = 53
 
 console.log("结果:", parseInt(add(a, b), 2))

@@ -28,13 +28,17 @@ A: a,b,c->
 	d: 4
 	return a+b+c+d
 
+// 
 IF: a,b,c A>=100 goto
 	boo: false
 !IF goto
 	boo: true
 a,b,c += a,b,c 
+
+// for 循环
 FOR: boo goto IF 
 
+// while 循环
 A: TRUE? 
 	b++
 	b>10?A: FLASE

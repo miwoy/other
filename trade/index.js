@@ -2,7 +2,6 @@ const Data = require("./data")
 const Normal = require("./strategy/normal")
 const Dingtou = require("./strategy/dingtou")
 const Strategy = require("./strategy/zzsd")
-const sz515030 = require("./data/515030.SZ.json")
 const sh601398 = require("./data/601398.SH.json")
 const sh600189 = require("./data/600189.SH.json")
 const sz002142 = require("./data/002142.SZ.json")
@@ -11,8 +10,9 @@ const {
     Context
 } = require("../GA/NGA/main")
 
-let DNA = [3.66507803, 0.0001755, 0.24617066]
+let DNA = [1, 0.24617066, 0.24617066, 3.66507803, 0.0001755]
 let ds = [
+    ["sh601398", formatData(sh601398)],
     ["sz002149", formatData(sz002149)],
     ["sh600189", formatData(sh600189)],
     ["sz002142", formatData(sz002142)]
@@ -24,7 +24,7 @@ let sellSpace = DNA[2]
 let buyLever = DNA[3]
 let sellLever = DNA[4]
 
-console.log(`【参数】总投入:${total},盈利空间:${space}`)
+console.log(`【参数】总投入:${total}`)
 ds.map((dd, i) => {
     console.log("数据分组-" + dd[0])
     let d = dd[1]

@@ -14,12 +14,12 @@ var living = require("./conf/living");
 // 					taste：味道，smell：气味，other：其他
 var types = {
 	value: {
-		"sound": 0,
-		"image": 1,
-		"feel": 2,
-		"taste": 3,
-		"smell": 4,
-		"other": 5
+		"sound": 'sound',
+		"image": 'image',
+		"feel": 'feel',
+		"taste": 'taste',
+		"smell": 'smell',
+		"other": 'other'
 	},
 	TYPE: living.NO
 }

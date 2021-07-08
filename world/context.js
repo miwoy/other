@@ -12,9 +12,15 @@ var config = require("./config");
 var Person = require("./live/person");
 var Message = require("./nonlive/message");
 
+var data = new Array(3000000).fill(0).map((v,i)=>new Person(i, config.types));
+
 var gkb = new Person("guankaobo", config.types);
 var my = new Person("mayi", config.types);
 var cwb = new Person("chenweibing", config.types);
+
+data.push(gkb)
+data.push(my)
+data.push(cwb)
 
 cwb.findResult = [];
 cwb.output = function(q) {
@@ -40,9 +46,19 @@ cwb.findForType = function(type) {
 
 
 module.exports = function() {
-    gkb.sayNews(new Message("Hello world!", config.types.value["sound"]));
-    my.sayNews(new Message("Hey!", config.types.value["sound"]));
-    cwb.findForType(config.types.value["sound"]);
-    cwb.findForName("guankaob");
-
+    // gkb.sayNews(new Message("Hello world!", config.types.value["sound"]));
+    // my.sayNews(new Message("Hey!", config.types.value["sound"]));
+    // cwb.findForType(config.types.value["sound"]);
+    let targetName = "guankaobo"
+    console.time('RaisedHand:')
+    cwb.findForName(targetName);
+    console.timeEnd('RaisedHand:')
+    console.time('Find')
+    for (var i = 0; i < data.length; i++) {
+        if (data[i].name == targetName) {
+            console.log('Find name', targetName)
+            break;
+        }
+    }
+    console.timeEnd('Find')
 }
